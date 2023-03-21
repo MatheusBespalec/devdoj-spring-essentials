@@ -1,0 +1,14 @@
+version: '1'
+services:
+  db:
+    container_name: devdojo_spring_essetials_db
+    image: mysql:8.0.32
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - devdojo_spring_essentials:/var/lib/mysql
+
+volumes:
+  devdojo_spring_essentials:
