@@ -8,6 +8,9 @@ import java.time.LocalDateTime;
 
 @Data
 @SuperBuilder
-public class BadRequestExceptionDetails extends ExceptionDetails {
-
+public class ExceptionDetails {
+    protected String title;
+    protected Integer status;
+    protected String message;
+    protected LocalDateTime timestamp;
 }

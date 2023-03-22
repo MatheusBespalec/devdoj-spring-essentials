@@ -14,7 +14,8 @@ public class ProcessorPostRequestBody {
     @NotNull
     @Min(0)
     private Integer threads;
+
     @NotNull
-    @DecimalMin("0.1")
+    @DecimalMin(value = "0.0")
     private Double baseClock;
 }

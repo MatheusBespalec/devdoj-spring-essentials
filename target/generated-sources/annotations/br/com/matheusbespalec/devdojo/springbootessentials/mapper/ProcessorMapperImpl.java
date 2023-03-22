@@ -4,14 +4,12 @@ import br.com.matheusbespalec.devdojo.springbootessentials.domain.Processor;
 import br.com.matheusbespalec.devdojo.springbootessentials.request.ProcessorPostRequestBody;
 import br.com.matheusbespalec.devdojo.springbootessentials.request.ProcessorPutRequestBody;
 import javax.annotation.processing.Generated;
-import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2023-02-17T20:52:06-0300",
+    date = "2023-03-21T21:39:20-0300",
     comments = "version: 1.5.3.Final, compiler: javac, environment: Java 11.0.16.1 (Oracle Corporation)"
 )
-@Component
 public class ProcessorMapperImpl extends ProcessorMapper {
 
     @Override
