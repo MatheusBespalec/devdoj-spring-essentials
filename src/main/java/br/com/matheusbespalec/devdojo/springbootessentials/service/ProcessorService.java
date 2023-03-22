@@ -8,6 +8,8 @@ import br.com.matheusbespalec.devdojo.springbootessentials.request.ProcessorPost
 import br.com.matheusbespalec.devdojo.springbootessentials.request.ProcessorPutRequestBody;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -16,8 +18,8 @@ import java.util.List;
 @Log4j2
 public class ProcessorService {
     private final ProcessorRepository processorRepository;
-    public List<Processor> listAll() {
-        return processorRepository.findAll();
+    public Page<Processor> listAll(Pageable pageable) {
+        return processorRepository.findAll(pageable);
     }
 
     public Processor findById(Long id) {

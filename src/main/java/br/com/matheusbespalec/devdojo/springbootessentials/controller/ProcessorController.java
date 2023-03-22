@@ -6,6 +6,8 @@ import br.com.matheusbespalec.devdojo.springbootessentials.request.ProcessorPutR
 import br.com.matheusbespalec.devdojo.springbootessentials.service.ProcessorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +23,9 @@ public class ProcessorController {
     private final ProcessorService processorService;
 
     @GetMapping
-    public ResponseEntity<List<Processor>> list() {
-        return ResponseEntity.ok(processorService.listAll());
+    public ResponseEntity<Page<Processor>> list(Pageable pageable) {
+        return ResponseEntity.ok(processorService.listAll(pageable)
+        );
     }
 
     @GetMapping("/{id}")
