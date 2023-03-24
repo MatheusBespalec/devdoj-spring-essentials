@@ -24,7 +24,13 @@ public class ProcessorController {
 
     @GetMapping
     public ResponseEntity<Page<Processor>> list(Pageable pageable) {
-        return ResponseEntity.ok(processorService.listAll(pageable)
+        return ResponseEntity.ok(processorService.list(pageable)
+        );
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<Processor>> listAll() {
+        return ResponseEntity.ok(processorService.listAll()
         );
     }
 

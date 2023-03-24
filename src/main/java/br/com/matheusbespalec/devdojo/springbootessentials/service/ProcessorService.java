@@ -18,8 +18,11 @@ import java.util.List;
 @Log4j2
 public class ProcessorService {
     private final ProcessorRepository processorRepository;
-    public Page<Processor> listAll(Pageable pageable) {
+    public Page<Processor> list(Pageable pageable) {
         return processorRepository.findAll(pageable);
+    }
+    public List<Processor> listAll() {
+        return processorRepository.findAll();
     }
 
     public Processor findById(Long id) {

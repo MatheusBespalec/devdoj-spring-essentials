@@ -14,6 +14,7 @@ import javax.persistence.Id;
 @AllArgsConstructor
 @Entity
 @NoArgsConstructor
+@Builder
 public class Processor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
