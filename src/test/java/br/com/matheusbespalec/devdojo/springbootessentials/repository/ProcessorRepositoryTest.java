@@ -1,6 +1,7 @@
 package br.com.matheusbespalec.devdojo.springbootessentials.repository;
 
 import br.com.matheusbespalec.devdojo.springbootessentials.domain.Processor;
+import br.com.matheusbespalec.devdojo.springbootessentials.util.ProcessorCreator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,7 @@ class ProcessorRepositoryTest {
     @Test
     @DisplayName("save persists anime when successful")
     void save_PersistsProcessor_WhenSuccessful() {
-        Processor processorToBeSaved = createProcessor();
+        Processor processorToBeSaved = ProcessorCreator.createProcessorToBeSaved();
         Processor processorSaved = this.processorRepository.save(processorToBeSaved);
 
         assertNotNull(processorSaved);
@@ -34,7 +35,7 @@ class ProcessorRepositoryTest {
     @Test
     @DisplayName("save updates updates processor when successful")
     void save_UpdatesProcessor_WhenSuccessful() {
-        Processor processorSaved = this.processorRepository.save(createProcessor());
+        Processor processorSaved = this.processorRepository.save(ProcessorCreator.createProcessorToBeSaved());
 
         processorSaved.setName("Ryzen 7 7700X");
         processorSaved.setCores(8);
@@ -53,7 +54,7 @@ class ProcessorRepositoryTest {
     @Test
     @DisplayName("findById returns the processor when successful")
     void findById_ReturnsProcessor_WhenSuccessful() {
-        Processor processorSaved = this.processorRepository.save(createProcessor());
+        Processor processorSaved = this.processorRepository.save(ProcessorCreator.createProcessorToBeSaved());
         Optional<Processor> processorOptional = this.processorRepository.findById(processorSaved.getId());
 
         Assertions.assertFalse(processorOptional.isEmpty());
@@ -77,7 +78,7 @@ class ProcessorRepositoryTest {
     @Test
     @DisplayName("find returns list of processors when successful")
     void find_ReturnsListOfProcessors_WhenSuccessful() {
-        Processor processorSaved = this.processorRepository.save(createProcessor());
+        Processor processorSaved = this.processorRepository.save(ProcessorCreator.createProcessorToBeSaved());
         List<Processor> processorList = this.processorRepository.findAll();
 
         assertNotNull(processorList);
@@ -87,7 +88,7 @@ class ProcessorRepositoryTest {
     @Test
     @DisplayName("delete removes processor when successful")
     void delete_RemovesProcessor_WhenSuccessful() {
-        Processor processorSaved = this.processorRepository.save(createProcessor());
+        Processor processorSaved = this.processorRepository.save(ProcessorCreator.createProcessorToBeSaved());
         this.processorRepository.deleteById(processorSaved.getId());
 
         Optional<Processor> processorOptional = this.processorRepository.findById(processorSaved.getId());
@@ -97,17 +98,8 @@ class ProcessorRepositoryTest {
     @Test
     @DisplayName("save throws ConstraintViolationException when processor name is empty")
     void save_ThrowsConstraintViolationException_WhenProcessorNameIsEmpty() {
-        Processor processorToBeSaved = createProcessor();
+        Processor processorToBeSaved = ProcessorCreator.createProcessorToBeSaved();
         processorToBeSaved.setName("");
         assertThrows(ConstraintViolationException.class, () -> this.processorRepository.save(processorToBeSaved));
-    }
-
-    private Processor createProcessor() {
-        return Processor.builder()
-                .name("Ryzen 7 7700X")
-                .cores(8)
-                .threads(16)
-                .baseClock(5.4)
-                .build();
     }
 }
