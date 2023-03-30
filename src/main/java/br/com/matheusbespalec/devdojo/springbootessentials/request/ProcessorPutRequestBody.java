@@ -1,5 +1,6 @@
 package br.com.matheusbespalec.devdojo.springbootessentials.request;
 
+import lombok.Builder;
 import lombok.Data;
 
 import javax.validation.constraints.DecimalMin;
@@ -8,6 +9,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 @Data
+@Builder
 public class ProcessorPutRequestBody {
     @Min(1)
     private Long id;

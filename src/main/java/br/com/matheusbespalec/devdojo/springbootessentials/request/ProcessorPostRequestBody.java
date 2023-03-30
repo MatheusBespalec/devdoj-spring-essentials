@@ -1,10 +1,12 @@
 package br.com.matheusbespalec.devdojo.springbootessentials.request;
 
+import lombok.Builder;
 import lombok.Data;
 
 import javax.validation.constraints.*;
 
 @Data
+@Builder
 public class ProcessorPostRequestBody {
     @NotEmpty
     private String name;
