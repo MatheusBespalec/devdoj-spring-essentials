@@ -12,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -66,7 +67,7 @@ public class ProcessorControllerIT {
     }
 
     @Test
-    @DisplayName("list returns list of processors when successful")
+    @DisplayName("listAll returns list of processors when successful")
     void listAll_ReturnsListOfProcessors_WhenSuccessful() {
         Processor processorSaved = processorRepository.save(ProcessorCreator.createProcessorToBeSaved());
 
@@ -86,7 +87,7 @@ public class ProcessorControllerIT {
     }
 
     @Test
-    @DisplayName("list returns empty list when processors is not found")
+    @DisplayName("listAll returns empty list when processors is not found")
     void listAll_ReturnsEmptyList_WhenProcessorsIsNotFound() {
         ResponseEntity<List<Processor>> processorsPage = restTemplate.exchange(
                 "/processors/all",
@@ -98,5 +99,83 @@ public class ProcessorControllerIT {
         Assertions.assertThat(processorsPage.getBody()).isNotNull();
         Assertions.assertThat(processorsPage.getStatusCode()).isEqualTo(HttpStatus.OK);
         Assertions.assertThat(processorsPage.getBody()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("findById returns processor when successful")
+    void findById_ReturnsProcessor_WhenSuccessful() {
+        Processor processorSaved = processorRepository.save(ProcessorCreator.createProcessorToBeSaved());
+        ResponseEntity<Processor> response = restTemplate.getForEntity("/processors/{id}", Processor.class, processorSaved.getId());
+
+        Assertions.assertThat(response).isNotNull();
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        Assertions.assertThat(response.getBody()).isEqualTo(processorSaved);
+    }
+
+    @Test
+    @DisplayName("findById throws BadRequestException when processor is not found")
+    void findById_ThrowsBadRequestException_WhenProcessorIsNotFound() {
+        ResponseEntity<Processor> response = restTemplate.getForEntity("/processors/{id}", Processor.class, 1);
+
+        Assertions.assertThat(response).isNotNull();
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    @DisplayName("save persist processor when successful")
+    void save_PersistsProcessor_WhenSuccessful() {
+        Processor processorToBeSaved = ProcessorCreator.createProcessorToBeSaved();
+
+        ResponseEntity<Processor> response = restTemplate.postForEntity("/processors", processorToBeSaved, Processor.class);
+
+        Assertions.assertThat(response).isNotNull();
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        Assertions.assertThat(response.getBody()).isNotNull();
+        Assertions.assertThat(response.getBody().getId()).isNotNull();
+        Assertions.assertThat(response.getBody().getName()).isEqualTo(processorToBeSaved.getName());
+        Assertions.assertThat(response.getBody().getBaseClock()).isEqualTo(processorToBeSaved.getBaseClock());
+        Assertions.assertThat(response.getBody().getCores()).isEqualTo(processorToBeSaved.getCores());
+        Assertions.assertThat(response.getBody().getThreads()).isEqualTo(processorToBeSaved.getThreads());
+    }
+
+    @Test
+    @DisplayName("replace updates processor when successful")
+    void replace_UpdatesProcessor_WhenSuccessful() {
+        Processor processorToBeSaved = ProcessorCreator.createProcessorToBeSaved();
+        ResponseEntity<Processor> response = restTemplate.postForEntity("/processors", processorToBeSaved, Processor.class);
+        Processor processorSaved = response.getBody();
+
+        processorSaved.setCores(12);
+
+        ResponseEntity<Void> replaceResponse = restTemplate.exchange("/processors", HttpMethod.PUT, new HttpEntity<>(processorSaved), Void.class);
+        Assertions.assertThat(replaceResponse).isNotNull();
+        Assertions.assertThat(replaceResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        ResponseEntity<Processor> responseFindById = restTemplate.getForEntity("/processors/{id}", Processor.class, processorSaved.getId());
+        Assertions.assertThat(responseFindById.getBody().getName()).isEqualTo(processorToBeSaved.getName());
+        Assertions.assertThat(responseFindById.getBody().getBaseClock()).isEqualTo(processorToBeSaved.getBaseClock());
+        Assertions.assertThat(responseFindById.getBody().getThreads()).isEqualTo(processorToBeSaved.getThreads());
+
+        Assertions.assertThat(responseFindById.getBody().getId()).isEqualTo(processorSaved.getId());
+        Assertions.assertThat(responseFindById.getBody().getCores()).isEqualTo(processorSaved.getCores());
+    }
+
+    @Test
+    @DisplayName("delete removes processor when successful")
+    void delete_RemovesProcessor_WhenSuccessful() {
+        Processor processorToBeSaved = ProcessorCreator.createProcessorToBeSaved();
+        ResponseEntity<Processor> saveResponse = restTemplate.postForEntity("/processors", processorToBeSaved, Processor.class);
+        Processor processorSaved = saveResponse.getBody();
+
+        restTemplate.getForEntity("/processors/{id}", Processor.class, processorSaved.getId());
+
+        ResponseEntity<Void> deleteResponse = restTemplate.exchange("/processors/{id}", HttpMethod.DELETE, new HttpEntity<>(processorSaved), Void.class, processorSaved.getId());
+        Assertions.assertThat(deleteResponse).isNotNull();
+        Assertions.assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        ResponseEntity<Processor> responseFindById = restTemplate.getForEntity("/processors/{id}", Processor.class, processorSaved.getId());
+        Assertions.assertThat(responseFindById.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 }
