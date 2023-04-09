@@ -1,7 +1,7 @@
 package br.com.matheusbespalec.devdojo.springbootessentials.config;
 
-import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -11,21 +11,29 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.authorizeRequests().anyRequest().authenticated().and().httpBasic();
+        http.csrf().disable()
+                .authorizeRequests()
+                .anyRequest()
+                .authenticated()
+                .and()
+                .httpBasic();
         return http.build();
     }
 
     @Bean
     public InMemoryUserDetailsManager userDetailsService() {
-        UserDetails user = User.withUsername("admin")
-                .password(PasswordEncoderFactories
-                        .createDelegatingPasswordEncoder()
-                        .encode("test"))
-                .roles("ADMIN")
+        UserDetails user2 = User.withUsername("user")
+                .password(PasswordEncoderFactories.createDelegatingPasswordEncoder().encode("test"))
+                .roles("USER")
                 .build();
-        return new InMemoryUserDetailsManager(user);
+        UserDetails user = User.withUsername("admin")
+                .password(PasswordEncoderFactories.createDelegatingPasswordEncoder().encode("test"))
+                .roles("ADMIN", "USER")
+                .build();
+        return new InMemoryUserDetailsManager(user, user2);
     }
 }

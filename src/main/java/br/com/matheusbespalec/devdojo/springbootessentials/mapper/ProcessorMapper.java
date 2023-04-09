@@ -4,7 +4,6 @@ import br.com.matheusbespalec.devdojo.springbootessentials.domain.Processor;
 import br.com.matheusbespalec.devdojo.springbootessentials.request.ProcessorPostRequestBody;
 import br.com.matheusbespalec.devdojo.springbootessentials.request.ProcessorPutRequestBody;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")

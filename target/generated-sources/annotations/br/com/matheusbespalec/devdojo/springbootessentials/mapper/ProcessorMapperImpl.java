@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2023-04-04T23:57:05-0300",
+    date = "2023-04-09T17:34:30-0300",
     comments = "version: 1.5.3.Final, compiler: javac, environment: Java 11.0.16.1 (Oracle Corporation)"
 )
 @Component
@@ -20,9 +20,15 @@ public class ProcessorMapperImpl extends ProcessorMapper {
             return null;
         }
 
-        Processor processor = new Processor();
+        Processor.ProcessorBuilder processor = Processor.builder();
 
-        return processor;
+        processor.id( processorPutRequestBody.getId() );
+        processor.name( processorPutRequestBody.getName() );
+        processor.cores( processorPutRequestBody.getCores() );
+        processor.threads( processorPutRequestBody.getThreads() );
+        processor.baseClock( processorPutRequestBody.getBaseClock() );
+
+        return processor.build();
     }
 
     @Override
@@ -31,8 +37,13 @@ public class ProcessorMapperImpl extends ProcessorMapper {
             return null;
         }
 
-        Processor processor = new Processor();
+        Processor.ProcessorBuilder processor = Processor.builder();
 
-        return processor;
+        processor.name( processorPostRequestBody.getName() );
+        processor.cores( processorPostRequestBody.getCores() );
+        processor.threads( processorPostRequestBody.getThreads() );
+        processor.baseClock( processorPostRequestBody.getBaseClock() );
+
+        return processor.build();
     }
 }

@@ -9,7 +9,10 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @Data
 @AllArgsConstructor
@@ -23,7 +26,16 @@ public class Processor {
 
     @NotBlank
     private String name;
+
+    @Min(1)
+    @NotNull
     private Integer cores;
+
+    @Min(1)
+    @NotNull
     private Integer threads;
+
+    @DecimalMin("0.1")
+    @NotNull
     private Double baseClock;
 }
