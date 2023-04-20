@@ -10,9 +10,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -48,19 +45,18 @@ public class ProcessorController {
         return ResponseEntity.ok(processorService.findById(id));
     }
 
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin")
     public ResponseEntity<Processor> save(@RequestBody @Valid ProcessorPostRequestBody processorPostRequestBody) {
         return new ResponseEntity<Processor>(processorService.save(processorPostRequestBody), HttpStatus.CREATED);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         processorService.delete(id);
         return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
     }
 
-    @PutMapping
+    @PutMapping("/admin")
     public ResponseEntity<Void> replace(@RequestBody @Valid ProcessorPutRequestBody processorPutRequestBody) {
         processorService.replace(processorPutRequestBody);
         return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
