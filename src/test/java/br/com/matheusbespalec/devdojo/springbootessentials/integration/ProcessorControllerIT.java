@@ -1,16 +1,24 @@
 package br.com.matheusbespalec.devdojo.springbootessentials.integration;
 
 import br.com.matheusbespalec.devdojo.springbootessentials.domain.Processor;
+import br.com.matheusbespalec.devdojo.springbootessentials.domain.User;
 import br.com.matheusbespalec.devdojo.springbootessentials.repository.ProcessorRepository;
+import br.com.matheusbespalec.devdojo.springbootessentials.repository.UserRepository;
 import br.com.matheusbespalec.devdojo.springbootessentials.util.ProcessorCreator;
 import br.com.matheusbespalec.devdojo.springbootessentials.wrapper.PageableResponse;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -25,17 +33,56 @@ import java.util.List;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class ProcessorControllerIT {
     @Autowired
-    private TestRestTemplate restTemplate;
+    @Qualifier("testRestTemplateRoleUser")
+    private TestRestTemplate restTemplateUser;
+
+    @Autowired
+    @Qualifier("testRestTemplateRoleAdmin")
+    private TestRestTemplate restTemplateAdmin;
 
     @Autowired
     private ProcessorRepository processorRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    private static final User USER = User.builder().username("user")
+            .password("{bcrypt}$2a$10$sHKIyLUbji2/pUWmKijCzeE1nvJvq7oOvx4gR.xl7sJwjlf7WXfBe")
+            .authorities("ROLE_USER")
+            .build();
+
+    private static final User ADMIN = User.builder().username("admin")
+            .password("{bcrypt}$2a$10$sHKIyLUbji2/pUWmKijCzeE1nvJvq7oOvx4gR.xl7sJwjlf7WXfBe")
+            .authorities("ROLE_ADMIN,ROLE_USER")
+            .build();
+
+    @TestConfiguration
+    @Lazy
+    static class Config {
+        @Bean(name = "testRestTemplateRoleUser")
+        public TestRestTemplate testRestTemplateRoleUserCreator(@Value("${local.server.port}") Integer port) {
+            RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder()
+                    .rootUri("http://127.0.0.1:"+port)
+                    .basicAuthentication("user", "test");
+            return new TestRestTemplate(restTemplateBuilder);
+        }
+
+        @Bean("testRestTemplateRoleAdmin")
+        public TestRestTemplate testRestTemplateRoleAdminCreator(@Value("${local.server.port}") Integer port) {
+            RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder()
+                    .rootUri("http://127.0.0.1:"+port)
+                    .basicAuthentication("admin", "test");
+            return new TestRestTemplate(restTemplateBuilder);
+        }
+    }
+
     @Test
     @DisplayName("list returns page of processors when successful")
     void list_ReturnsPageOfProcessors_WhenSuccessful() {
+        userRepository.save(USER);
         Processor processorSaved = processorRepository.save(ProcessorCreator.createProcessorToBeSaved());
 
-        ResponseEntity<PageableResponse<Processor>> processorsPage = restTemplate.exchange(
+        ResponseEntity<PageableResponse<Processor>> processorsPage = restTemplateUser.exchange(
                 "/processors",
                 HttpMethod.GET,
                 null,
@@ -53,7 +100,8 @@ public class ProcessorControllerIT {
     @Test
     @DisplayName("list returns empty page when processors is not found")
     void list_ReturnsEmptyPage_WhenProcessorsIsNotFound() {
-        ResponseEntity<PageableResponse<Processor>> processorsPage = restTemplate.exchange(
+        userRepository.save(USER);
+        ResponseEntity<PageableResponse<Processor>> processorsPage = restTemplateUser.exchange(
                 "/processors",
                 HttpMethod.GET,
                 null,
@@ -69,9 +117,10 @@ public class ProcessorControllerIT {
     @Test
     @DisplayName("listAll returns list of processors when successful")
     void listAll_ReturnsListOfProcessors_WhenSuccessful() {
+        userRepository.save(USER);
         Processor processorSaved = processorRepository.save(ProcessorCreator.createProcessorToBeSaved());
 
-        ResponseEntity<List<Processor>> processorsPage = restTemplate.exchange(
+        ResponseEntity<List<Processor>> processorsPage = restTemplateUser.exchange(
                 "/processors/all",
                 HttpMethod.GET,
                 null,
@@ -89,7 +138,8 @@ public class ProcessorControllerIT {
     @Test
     @DisplayName("listAll returns empty list when processors is not found")
     void listAll_ReturnsEmptyList_WhenProcessorsIsNotFound() {
-        ResponseEntity<List<Processor>> processorsPage = restTemplate.exchange(
+        userRepository.save(USER);
+        ResponseEntity<List<Processor>> processorsPage = restTemplateUser.exchange(
                 "/processors/all",
                 HttpMethod.GET,
                 null,
@@ -104,8 +154,9 @@ public class ProcessorControllerIT {
     @Test
     @DisplayName("findById returns processor when successful")
     void findById_ReturnsProcessor_WhenSuccessful() {
+        userRepository.save(USER);
         Processor processorSaved = processorRepository.save(ProcessorCreator.createProcessorToBeSaved());
-        ResponseEntity<Processor> response = restTemplate.getForEntity("/processors/{id}", Processor.class, processorSaved.getId());
+        ResponseEntity<Processor> response = restTemplateUser.getForEntity("/processors/{id}", Processor.class, processorSaved.getId());
 
         Assertions.assertThat(response).isNotNull();
         Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -116,7 +167,8 @@ public class ProcessorControllerIT {
     @Test
     @DisplayName("findById throws BadRequestException when processor is not found")
     void findById_ThrowsBadRequestException_WhenProcessorIsNotFound() {
-        ResponseEntity<Processor> response = restTemplate.getForEntity("/processors/{id}", Processor.class, 1);
+        userRepository.save(USER);
+        ResponseEntity<Processor> response = restTemplateUser.getForEntity("/processors/{id}", Processor.class, 1);
 
         Assertions.assertThat(response).isNotNull();
         Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -125,9 +177,10 @@ public class ProcessorControllerIT {
     @Test
     @DisplayName("save persist processor when successful")
     void save_PersistsProcessor_WhenSuccessful() {
+        userRepository.save(ADMIN);
         Processor processorToBeSaved = ProcessorCreator.createProcessorToBeSaved();
 
-        ResponseEntity<Processor> response = restTemplate.postForEntity("/processors", processorToBeSaved, Processor.class);
+        ResponseEntity<Processor> response = restTemplateAdmin.postForEntity("/processors/admin", processorToBeSaved, Processor.class);
 
         Assertions.assertThat(response).isNotNull();
         Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -141,19 +194,32 @@ public class ProcessorControllerIT {
     }
 
     @Test
+    @DisplayName("save returns 403 (Forbidden) when user authenticated is not admin")
+    void save_Returns403Forbidden_WhenUserAuthenticatedIsNotAdmin() {
+        userRepository.save(USER);
+
+        ResponseEntity<Processor> response = restTemplateUser.postForEntity("/processors/admin", null, Processor.class);
+
+        Assertions.assertThat(response).isNotNull();
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+
+    @Test
     @DisplayName("replace updates processor when successful")
     void replace_UpdatesProcessor_WhenSuccessful() {
+        userRepository.save(ADMIN);
         Processor processorToBeSaved = ProcessorCreator.createProcessorToBeSaved();
-        ResponseEntity<Processor> response = restTemplate.postForEntity("/processors", processorToBeSaved, Processor.class);
+        ResponseEntity<Processor> response = restTemplateAdmin.postForEntity("/processors/admin", processorToBeSaved, Processor.class);
         Processor processorSaved = response.getBody();
 
         processorSaved.setCores(12);
 
-        ResponseEntity<Void> replaceResponse = restTemplate.exchange("/processors", HttpMethod.PUT, new HttpEntity<>(processorSaved), Void.class);
+        ResponseEntity<Void> replaceResponse = restTemplateAdmin.exchange("/processors/admin", HttpMethod.PUT, new HttpEntity<>(processorSaved), Void.class);
         Assertions.assertThat(replaceResponse).isNotNull();
         Assertions.assertThat(replaceResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-        ResponseEntity<Processor> responseFindById = restTemplate.getForEntity("/processors/{id}", Processor.class, processorSaved.getId());
+        ResponseEntity<Processor> responseFindById = restTemplateAdmin.getForEntity("/processors/{id}", Processor.class, processorSaved.getId());
         Assertions.assertThat(responseFindById.getBody().getName()).isEqualTo(processorToBeSaved.getName());
         Assertions.assertThat(responseFindById.getBody().getBaseClock()).isEqualTo(processorToBeSaved.getBaseClock());
         Assertions.assertThat(responseFindById.getBody().getThreads()).isEqualTo(processorToBeSaved.getThreads());
@@ -163,19 +229,38 @@ public class ProcessorControllerIT {
     }
 
     @Test
+    @DisplayName("replace returns 403 (Forbidden) when authenticated user is not admin")
+    void replace_Returns403Forbidden_WhenUserAuthenticatedIsNotAdmin() {
+        userRepository.save(USER);
+
+        ResponseEntity<Void> replaceResponse = restTemplateUser.exchange("/processors/admin", HttpMethod.PUT, null, Void.class);
+
+        Assertions.assertThat(replaceResponse).isNotNull();
+        Assertions.assertThat(replaceResponse.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
     @DisplayName("delete removes processor when successful")
     void delete_RemovesProcessor_WhenSuccessful() {
+        userRepository.save(ADMIN);
         Processor processorToBeSaved = ProcessorCreator.createProcessorToBeSaved();
-        ResponseEntity<Processor> saveResponse = restTemplate.postForEntity("/processors", processorToBeSaved, Processor.class);
+        ResponseEntity<Processor> saveResponse = restTemplateAdmin.postForEntity("/processors/admin", processorToBeSaved, Processor.class);
         Processor processorSaved = saveResponse.getBody();
 
-        restTemplate.getForEntity("/processors/{id}", Processor.class, processorSaved.getId());
-
-        ResponseEntity<Void> deleteResponse = restTemplate.exchange("/processors/{id}", HttpMethod.DELETE, new HttpEntity<>(processorSaved), Void.class, processorSaved.getId());
+        ResponseEntity<Void> deleteResponse = restTemplateAdmin.exchange("/processors/admin/{id}", HttpMethod.DELETE, new HttpEntity<>(processorSaved), Void.class, processorSaved.getId());
         Assertions.assertThat(deleteResponse).isNotNull();
         Assertions.assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-        ResponseEntity<Processor> responseFindById = restTemplate.getForEntity("/processors/{id}", Processor.class, processorSaved.getId());
+        ResponseEntity<Processor> responseFindById = restTemplateAdmin.getForEntity("/processors/{id}", Processor.class, processorSaved.getId());
         Assertions.assertThat(responseFindById.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    @DisplayName("delete returns 403 (Forbidden when user authenticated is not admin)")
+    void delete_Returns403Forbidden_WhenUserAuthenticatedIsNotAdmin() {
+        userRepository.save(USER);
+        ResponseEntity<Void> deleteResponse = restTemplateUser.exchange("/processors/admin/{id}", HttpMethod.DELETE, null, Void.class, 1);
+        Assertions.assertThat(deleteResponse).isNotNull();
+        Assertions.assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 }
